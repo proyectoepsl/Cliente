@@ -2,8 +2,8 @@ package com.nfc.proyecto.cliente;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +14,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -33,6 +36,8 @@ import java.nio.charset.StandardCharsets;
 
 import android.util.Base64;
 
+import static android.content.Context.*;
+
 
 public class MainActivity extends AppCompatActivity {
     //Inicializacion de variables.
@@ -41,7 +46,9 @@ public class MainActivity extends AppCompatActivity {
     String resultado;
     JSONObject obj;
     Button IdenSala;
-
+    //Declaracion de preferencias
+    SharedPreferences prefs;
+    SharedPreferences prefspin;
     private static final int MY_WRITE_EXTERNAL_STORAGE = 0;
     //Vista para mostrar pantalla de permisos
     private View mLayout;
@@ -58,7 +65,10 @@ public class MainActivity extends AppCompatActivity {
         IdenSala = (Button) findViewById(R.id.IdenSala);
         final ImageView imgViewer = (ImageView) findViewById(R.id.imageView);
         final TextView mensaje = (TextView) findViewById(R.id.Mensaje);
+        //Crear preferencias
+        prefs=getSharedPreferences("Datos", MODE_PRIVATE);
 
+        prefspin=getSharedPreferences("Pin", MODE_PRIVATE);
         //Llamada al boton de identificar sala
         IdenSala.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -186,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         estado de conexión, además de utilidades para manipular cadenas de números telefónicos.
          */
         TelephonyManager tel;
-        tel = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        tel = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         imei = tel.getDeviceId().toString();
     }
     //Funcion para verificar los permisos del usuario
@@ -278,5 +288,28 @@ public class MainActivity extends AppCompatActivity {
         intent.setData(Uri.parse("package:" + getPackageName()));
         startActivity(intent);
     }
-   
+    //LLamar a los menus desde la vista
+    private void logout(){
+        //Volvemos a la pantalla de login
+        Intent i = new Intent(MainActivity.this, LoginActivity.class);
+        //Evita que el usuario puede echar hacia atras una vez se ha logueado
+        i.setFlags(i.FLAG_ACTIVITY_NEW_TASK|i.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(i);
+    }
+    //Metodo para eliminar prefencias compartidas
+    private void borrarSharedPreferences(){
+        prefs.edit().clear().apply();
+
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.configuracion,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        return super.onOptionsItemSelected(item);
+    }
 }

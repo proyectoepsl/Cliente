@@ -30,7 +30,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.nfc.proyecto.cliente.MainActivity"
+            android:name="com.nfc.proyecto.cliente.LoginActivity"
             android:configChanges="keyboardHidden|orientation|screenSize" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,6 +38,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.nfc.proyecto.cliente.MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <!-- Permisos de NFC solo para la actividad NFC -->
         <activity
             android:name="com.nfc.proyecto.cliente.NfcActivity"
