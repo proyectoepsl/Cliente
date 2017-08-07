@@ -271,7 +271,7 @@ public class NfcActivity extends AppCompatActivity {
                                     public void run () {
                                         //Si el usuario puede entrar a la sala le muestra el mensaje de bienvenida
                                         try {
-                                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.ok));
+                                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.ok_usuario));
                                             mensaje.setText(obj.get("Error").toString());
                                         } catch (Throwable t) {
                                             t.printStackTrace();
@@ -284,7 +284,7 @@ public class NfcActivity extends AppCompatActivity {
                                     public void run () {
                                         //Si el usuario no puede entrar en la sala se muestra el mensaje de error.
                                         try {
-                                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.error));
+                                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.error_usuario));
                                             mensaje.setText(obj.get("Error").toString());
 
                                         } catch (Throwable t) {

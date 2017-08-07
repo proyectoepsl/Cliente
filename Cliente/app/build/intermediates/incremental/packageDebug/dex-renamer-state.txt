@@ -1,4 +1,7 @@
-#Wed Aug 02 18:45:19 CEST 2017
-base.0=C\:\\Users\\sony\\Downloads\\Cliente-v3\\Cliente\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\1f\\main
-renamed.0=classes.dex
-file.0=C\:\\Users\\sony\\Downloads\\Cliente-v3\\Cliente\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\1f\\main\\classes.dex
+#Mon Aug 07 17:37:37 CEST 2017
+base.0=C\:\\Users\\sony\\Downloads\\Cliente-v3---mario http\\Cliente\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10000\\instant-run_9c99a1771ad4a0d13e0f12179bc544061cdf58c1
+renamed.1=classes.dex
+renamed.0=classes2.dex
+file.1=C\:\\Users\\sony\\Downloads\\Cliente-v3---mario http\\Cliente\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10000\\instant-run-bootstrap_943e505f83c45b3d70ce865c7e1d9f37af6fed4a\\classes.dex
+base.1=C\:\\Users\\sony\\Downloads\\Cliente-v3---mario http\\Cliente\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10000\\instant-run-bootstrap_943e505f83c45b3d70ce865c7e1d9f37af6fed4a
+file.0=C\:\\Users\\sony\\Downloads\\Cliente-v3---mario http\\Cliente\\app\\build\\intermediates\\transforms\\dex\\debug\\folders\\1000\\10000\\instant-run_9c99a1771ad4a0d13e0f12179bc544061cdf58c1\\classes.dex

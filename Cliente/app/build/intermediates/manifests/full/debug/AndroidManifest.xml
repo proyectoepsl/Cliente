@@ -5,7 +5,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="15"
+        android:minSdkVersion="11"
         android:targetSdkVersion="25" />
 
     <!-- Permisos imei -->
@@ -31,7 +31,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name="com.nfc.proyecto.cliente.LoginActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize" >
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/Theme.AppCompat.NoActionBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -40,6 +41,9 @@
         </activity>
         <activity
             android:name="com.nfc.proyecto.cliente.MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+        <activity
+            android:name="com.nfc.proyecto.cliente.UserActivity"
             android:configChanges="keyboardHidden|orientation|screenSize" />
         <!-- Permisos de NFC solo para la actividad NFC -->
         <activity

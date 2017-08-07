@@ -25,7 +25,11 @@
         android:roundIcon="@mipmap/nfc"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LoginActivity" android:configChanges="keyboardHidden|orientation|screenSize">
+        <activity android:name=".LoginActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            >
+
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,6 +37,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" android:configChanges="keyboardHidden|orientation|screenSize"/>
+        <activity android:name=".UserActivity" android:configChanges="keyboardHidden|orientation|screenSize"/>
         <!-- Permisos de NFC solo para la actividad NFC-->
         <activity android:name=".NfcActivity" android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>

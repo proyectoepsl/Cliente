@@ -2,6 +2,7 @@ package com.nfc.proyecto.cliente;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -9,13 +10,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.telephony.TelephonyManager;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -30,13 +32,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
-import android.support.design.widget.Snackbar;
-
 import java.nio.charset.StandardCharsets;
-
-import android.util.Base64;
-
-import static android.content.Context.*;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -49,11 +45,42 @@ public class MainActivity extends AppCompatActivity {
     //Declaracion de preferencias
     SharedPreferences prefs;
     SharedPreferences prefspin;
+    Http http;
     private static final int MY_WRITE_EXTERNAL_STORAGE = 0;
     //Vista para mostrar pantalla de permisos
     private View mLayout;
+    //Clases para mostrar el menu
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.configuracion, menu);
+        return true;
+    }
+    //Clase para seleccionar las Opciones del menu
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent j = new Intent(getApplicationContext(), UserActivity.class);
+        switch (item.getItemId()) {
 
-
+            case R.id.username:
+                j.putExtra("item", item.getTitle());
+                startActivity(j);
+                return true;
+            case R.id.password:
+                j.putExtra("item", item.getTitle());
+                startActivity(j);
+                return true;
+            case R.id.url:
+                j.putExtra("item", item.getTitle());
+                startActivity(j);
+                return true;
+            case R.id.pin:
+                j.putExtra("item", item.getTitle());
+                startActivity(j);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
     @Override
     @TargetApi(Build.VERSION_CODES.M)
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,40 +92,54 @@ public class MainActivity extends AppCompatActivity {
         IdenSala = (Button) findViewById(R.id.IdenSala);
         final ImageView imgViewer = (ImageView) findViewById(R.id.imageView);
         final TextView mensaje = (TextView) findViewById(R.id.Mensaje);
-        //Crear preferencias
-        prefs=getSharedPreferences("Datos", MODE_PRIVATE);
+        final TextView capacidad = (TextView) findViewById(R.id.Capacidad);
+        final TextView aforo = (TextView) findViewById(R.id.Aforo);
 
-        prefspin=getSharedPreferences("Pin", MODE_PRIVATE);
+        prefs = getSharedPreferences("Preferencias", Context.MODE_PRIVATE);
         //Llamada al boton de identificar sala
         IdenSala.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //Funcion para ver imei del dispositivo
                 verifyPermission();
+                http = new Http();
 
                 //Enviar datos por post al servidor
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
+
                             //1º:Encritacion de los datos
                             //LLanada a la funcion de encriptar
                             Crypt aesCrypt = new Crypt();
                             //Encriptacion del imei
                             String a = aesCrypt.encrypt_string(imei);
-                            //2º:Envio de datos por HTTP
+                            JSONObject dato = new JSONObject();
+                            dato.put("Hash", a);
+                            String url=getUrl();
+                            /*
 
+                            //Creo entidad para enviar los datos
+                            StringEntity entity = new StringEntity(dato.toString());
+                            //llamamos a la clase para hacer la llamada
+                            http.setEntity(entity);
+                            String url1=getUrl();
+                            http.setUrl(url1);
+                            http.setRest("/rest_sala/");
+                            http.doInBackground();
+                            resultado = http.getResultado();
+                            */
+                            //2º:Envio de datos por HTTP
                             HttpClient httpClient = new DefaultHttpClient();
                             //Url del servidor
                             //https://proyectoepsl.pythonanywhere.com/rest_sala/
                             //http://192.168.2.129:8000/rest_sala/
-                            HttpPost post = new HttpPost("https://proyectoepsl.pythonanywhere.com/rest_sala/");
+                            HttpPost post = new HttpPost("http://" + url + "/rest_sala/");
                             //Cabecera del envio de datos
                             post.setHeader("Content-Type", "application/json");
                             post.setHeader("charset", "utf-8");
                             //Construimos el objeto en formato JSON
-                            JSONObject dato = new JSONObject();
-                            //El dato encritado en json se llama Hash
-                            dato.put("Hash", a);
+
                             //Creo entidad para enviar los datos
                             StringEntity entity = new StringEntity(dato.toString());
                             post.setEntity(entity);
@@ -107,13 +148,13 @@ public class MainActivity extends AppCompatActivity {
 
                             //3º:Procesar la respuesta del servidor
                             //Obtengo respuesta del servidor
+                            //Realizo el envío
+                            //Recibo respuesta del servidor.
                             respStr = EntityUtils.toString(resp.getEntity());
-                            //Creo un objeto Json con esta respuesta para poder acceder a los datos
                             obj = new JSONObject(respStr);
-
-                            //4º:Segun la respuesta del servidor llevo a cabo las acciones.
-                            //Obtengo el objeto resultado de la respuesta
                             resultado = obj.get("result").toString();
+
+
                             //Si la accion se ha realizado sin problemas
                             if (resultado.equals("200")) {
                                 //Hilo de la interface del usuario en la que estoy
@@ -136,11 +177,15 @@ public class MainActivity extends AppCompatActivity {
                                             //Muestro el boton de leer NFC
                                             LeerNfc.setVisibility(View.VISIBLE);
                                             //Muestro el valor de la dependencia
-                                            mensaje.setText("Plano Emergencia Sala Nº " + obj.get("Dependencia").toString());
+                                            mensaje.setText("Dependencia Nº " + obj.get("Dependencia").toString());
+                                            capacidad.setText("Capacidad Máxima:"+obj.get("Capacidad").toString());
+                                            aforo.setText("Aforo actual:"+obj.get("Aforo").toString());
+                                        } catch(Exception ex) {
+                                        Log.e("Service","Error!", ex);
+                                         }
+                                        catch (Throwable t) {
 
-                                        } catch (Throwable t) {
-
-                                            Log.e("My App", "JSON mal formado \"" + respStr + "\"");
+                                            t.printStackTrace();
                                         }
                                     }
                                 });
@@ -153,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                                         //Do something on UiThread
                                         try {
                                             //Muestro imagen de error
-                                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.error));
+                                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.error_sala));
                                             //Muestro mensaje de error
                                             mensaje.setText(obj.get("Error").toString());
                                         } catch (Throwable t) {
@@ -179,8 +224,8 @@ public class MainActivity extends AppCompatActivity {
 
                     Intent i = new Intent(view.getContext(), NfcActivity.class);
                     //Obtenemos el numero de sala
-                     i.putExtra("Sala_id", obj.get("IdSala").toString());
-                     startActivity(i);
+                    i.putExtra("Sala_id", obj.get("IdSala").toString());
+                    startActivity(i);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -288,28 +333,11 @@ public class MainActivity extends AppCompatActivity {
         intent.setData(Uri.parse("package:" + getPackageName()));
         startActivity(intent);
     }
-    //LLamar a los menus desde la vista
-    private void logout(){
-        //Volvemos a la pantalla de login
-        Intent i = new Intent(MainActivity.this, LoginActivity.class);
-        //Evita que el usuario puede echar hacia atras una vez se ha logueado
-        i.setFlags(i.FLAG_ACTIVITY_NEW_TASK|i.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(i);
-    }
-    //Metodo para eliminar prefencias compartidas
-    private void borrarSharedPreferences(){
-        prefs.edit().clear().apply();
+    //Obtengo la Url del servidor
+    private String getUrl(){
+        return prefs.getString("Url","");
 
     }
 
-    public boolean onCreateOptionsMenu(Menu menu){
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.configuracion,menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
-    }
 }
