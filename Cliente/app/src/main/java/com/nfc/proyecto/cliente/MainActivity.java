@@ -2,7 +2,6 @@ package com.nfc.proyecto.cliente;
 
 import android.Manifest;
 import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -24,16 +23,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
-
 
 public class MainActivity extends AppCompatActivity {
     //Inicializacion de variables.
@@ -42,25 +35,23 @@ public class MainActivity extends AppCompatActivity {
     String resultado;
     JSONObject obj;
     Button IdenSala;
-    //Declaracion de preferencias
-    SharedPreferences prefs;
-    SharedPreferences prefspin;
-    Http http;
+
     private static final int MY_WRITE_EXTERNAL_STORAGE = 0;
     //Vista para mostrar pantalla de permisos
     private View mLayout;
+
     //Clases para mostrar el menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.configuracion, menu);
         return true;
     }
+
     //Clase para seleccionar las Opciones del menu
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent j = new Intent(getApplicationContext(), UserActivity.class);
         switch (item.getItemId()) {
-
             case R.id.username:
                 j.putExtra("item", item.getTitle());
                 startActivity(j);
@@ -81,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
     @Override
     @TargetApi(Build.VERSION_CODES.M)
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,133 +87,84 @@ public class MainActivity extends AppCompatActivity {
         final TextView capacidad = (TextView) findViewById(R.id.Capacidad);
         final TextView aforo = (TextView) findViewById(R.id.Aforo);
 
-        prefs = getSharedPreferences("Preferencias", Context.MODE_PRIVATE);
         //Llamada al boton de identificar sala
         IdenSala.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //Funcion para ver imei del dispositivo
                 verifyPermission();
-                http = new Http();
-
                 //Enviar datos por post al servidor
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
+                try {
+                    //1º:Encritacion de los datos
+                    //LLanada a la funcion de encriptar
+                    Crypt aesCrypt = Crypt.getInstance();
+                    //Encriptacion del imei
+                    String a = aesCrypt.encrypt_string(imei);
+                    JSONObject dato = new JSONObject();
+                    dato.put("Hash", a);
+
+                    Prefern prefern = Prefern.getPrefern();
+                    String url = prefern.getVariable("Url");
+
+                    //Creo entidad para enviar los datos
+                    StringEntity entity = new StringEntity(dato.toString());
+                    Http http = Http.getHttp();
+                    http = Http.getHttp();
+                    http.setEntity(entity);
+                    http.setUrl(url);
+                    http.setRest("/rest_sala/");
+                    http.doInBackground();
+                    obj = http.getResponse();
+                    resultado = obj.get("result").toString();
+
+
+                    //Si la accion se ha realizado sin problemas
+                    if (resultado.equals("200")) {
                         try {
-
-                            //1º:Encritacion de los datos
-                            //LLanada a la funcion de encriptar
-                            Crypt aesCrypt = new Crypt();
-                            //Encriptacion del imei
-                            String a = aesCrypt.encrypt_string(imei);
-                            JSONObject dato = new JSONObject();
-                            dato.put("Hash", a);
-                            String url=getUrl();
-                            /*
-
-                            //Creo entidad para enviar los datos
-                            StringEntity entity = new StringEntity(dato.toString());
-                            //llamamos a la clase para hacer la llamada
-                            http.setEntity(entity);
-                            String url1=getUrl();
-                            http.setUrl(url1);
-                            http.setRest("/rest_sala/");
-                            http.doInBackground();
-                            resultado = http.getResultado();
-                            */
-                            //2º:Envio de datos por HTTP
-                            HttpClient httpClient = new DefaultHttpClient();
-                            //Url del servidor
-                            //https://proyectoepsl.pythonanywhere.com/rest_sala/
-                            //http://192.168.2.129:8000/rest_sala/
-                            HttpPost post = new HttpPost("http://" + url + "/rest_sala/");
-                            //Cabecera del envio de datos
-                            post.setHeader("Content-Type", "application/json");
-                            post.setHeader("charset", "utf-8");
-                            //Construimos el objeto en formato JSON
-
-                            //Creo entidad para enviar los datos
-                            StringEntity entity = new StringEntity(dato.toString());
-                            post.setEntity(entity);
-                            //Realizo el envío
-                            HttpResponse resp = httpClient.execute(post);
-
-                            //3º:Procesar la respuesta del servidor
-                            //Obtengo respuesta del servidor
-                            //Realizo el envío
-                            //Recibo respuesta del servidor.
-                            respStr = EntityUtils.toString(resp.getEntity());
-                            obj = new JSONObject(respStr);
-                            resultado = obj.get("result").toString();
-
-
-                            //Si la accion se ha realizado sin problemas
-                            if (resultado.equals("200")) {
-                                //Hilo de la interface del usuario en la que estoy
-                                MainActivity.this.runOnUiThread(new Runnable() {
-                                    public void run() {
-
-                                        try {
-                                            //Procesado de la imagen que me llega del servidor
-                                            byte[] byteArray = "".getBytes();
-                                            //Paso el JSON a string y lo condifico a ASCII
-                                            byteArray = obj.get("Plano").toString().getBytes(StandardCharsets.US_ASCII);
-                                            //Lo decodifico en Base64
-                                            byteArray = Base64.decode(byteArray, Base64.DEFAULT);
-                                            //Crear un ojeto Bitmap que es una imagen en bites
-                                            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-                                            //Muestro la imagen en la vista imgViewer
-                                            imgViewer.setImageBitmap(bitmap);
-                                            //Oculto el boton de identificar sala
-                                            IdenSala.setVisibility(View.GONE);
-                                            //Muestro el boton de leer NFC
-                                            LeerNfc.setVisibility(View.VISIBLE);
-                                            //Muestro el valor de la dependencia
-                                            mensaje.setText("Dependencia Nº " + obj.get("Dependencia").toString());
-                                            capacidad.setText("Capacidad Máxima:"+obj.get("Capacidad").toString());
-                                            aforo.setText("Aforo actual:"+obj.get("Aforo").toString());
-                                        } catch(Exception ex) {
-                                        Log.e("Service","Error!", ex);
-                                         }
-                                        catch (Throwable t) {
-
-                                            t.printStackTrace();
-                                        }
-                                    }
-                                });
-
-                            } else {
-                                //Mostrar el mensaje de error del servidor
-                                //Hilo de la interface del usuario en la que estoy
-                                MainActivity.this.runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        //Do something on UiThread
-                                        try {
-                                            //Muestro imagen de error
-                                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.error_sala));
-                                            //Muestro mensaje de error
-                                            mensaje.setText(obj.get("Error").toString());
-                                        } catch (Throwable t) {
-                                            t.printStackTrace();
-                                        }
-                                    }
-                                });
-                            }
+                            //Procesado de la imagen que me llega del servidor
+                            byte[] byteArray = "".getBytes();
+                            //Paso el JSON a string y lo condifico a ASCII
+                            byteArray = obj.get("Plano").toString().getBytes(StandardCharsets.US_ASCII);
+                            //Lo decodifico en Base64
+                            byteArray = Base64.decode(byteArray, Base64.DEFAULT);
+                            //Crear un ojeto Bitmap que es una imagen en bites
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                            //Muestro la imagen en la vista imgViewer
+                            imgViewer.setImageBitmap(bitmap);
+                            //Oculto el boton de identificar sala
+                            IdenSala.setVisibility(View.GONE);
+                            //Muestro el boton de leer NFC
+                            LeerNfc.setVisibility(View.VISIBLE);
+                            //Muestro el valor de la dependencia
+                            mensaje.setText("Dependencia Nº " + obj.get("Dependencia").toString());
+                            capacidad.setText("Capacidad Máxima:" + obj.get("Capacidad").toString());
+                            aforo.setText("Aforo actual:" + obj.get("Aforo").toString());
                         } catch (Exception ex) {
-                            ex.printStackTrace();
+                            Log.e("Service", "Error!", ex);
+                        } catch (Throwable t) {
+
+                            t.printStackTrace();
+                        }
+                    } else {
+                        //Mostrar el mensaje de error del servidor
+                        try {
+                            //Muestro imagen de error
+                            imgViewer.setImageDrawable(getResources().getDrawable(R.drawable.error_sala));
+                            //Muestro mensaje de error
+                            mensaje.setText(obj.get("Error").toString());
+                        } catch (Throwable t) {
+                            t.printStackTrace();
                         }
                     }
-                }).start();
-
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
 
         //4º Pasar los datos a la vista de NFC
-
         LeerNfc.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 try {
-
                     Intent i = new Intent(view.getContext(), NfcActivity.class);
                     //Obtenemos el numero de sala
                     i.putExtra("Sala_id", obj.get("IdSala").toString());
@@ -244,12 +187,11 @@ public class MainActivity extends AppCompatActivity {
         tel = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
         imei = tel.getDeviceId().toString();
     }
+
     //Funcion para verificar los permisos del usuario
     //Paso 1. Verificar permiso
     @TargetApi(Build.VERSION_CODES.M)
     private void verifyPermission() {
-
-
         //Compara que version de android que tiene el sistema
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //Se comprueba si la aplicacion tiene permiso
@@ -266,7 +208,6 @@ public class MainActivity extends AppCompatActivity {
             //La version de android no requiere permisos
             obtenerIMEI();
         }
-
     }
 
 
@@ -277,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
         anteriormente el dialogo de permisos y el usuario lo negó*/
         if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.READ_PHONE_STATE)) {
-
             showSnackBar();
         } else {
             /*Si el usuario rechaza la solicitud de permiso en el pasado y selecciona la opción Don't ask again en el diálogo de
@@ -310,7 +250,6 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Método para mostrar el snackbar de la aplicación.
      * Snackbar es un componente de la librería de diseño 'com.android.support:design:23.1.0'
-
      */
     private void showSnackBar() {
         Snackbar.make(mLayout, R.string.permission_write_storage,
@@ -333,11 +272,4 @@ public class MainActivity extends AppCompatActivity {
         intent.setData(Uri.parse("package:" + getPackageName()));
         startActivity(intent);
     }
-    //Obtengo la Url del servidor
-    private String getUrl(){
-        return prefs.getString("Url","");
-
-    }
-
-
 }

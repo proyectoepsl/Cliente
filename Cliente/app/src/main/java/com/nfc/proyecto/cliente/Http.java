@@ -23,86 +23,100 @@ import java.io.IOException;
  * Created by sony on 03/08/2017.
  */
 
-public class Http extends AsyncTask<String, Integer, String>{
+public class Http extends AsyncTask<String, Integer, Void>{
 
     String resultado;
     JSONObject obj;
     HttpEntity entity;
     String url;
     String rest;
+    String respStr;
     Context context;
+    private static Http http;
 
+    //Creación constructor patrón singleton
+    //Solo se crea un objeto de esta clase en toda la aplicación
+    public static Http getHttp(){
+        if(http == null)
+            http = new Http();
+
+        return http;
+    }
+
+    /**
+     *
+     * @param url
+     */
     public void setUrl(String url){
         this.url = url;
     }
 
+    /**
+     *
+      * @param entity
+     */
     public void setEntity(HttpEntity entity){
-       this.entity = entity;
-   }
+        this.entity = entity;
+    }
 
+    /**
+     *
+     * @param rest
+     */
     public void setRest(String rest){ this.rest = rest; }
 
-    public String getResultado(){ return this.resultado; }
-
-
+    /**
+     *
+     * @return
+     */
+    public JSONObject getResponse(){ return this.obj; }
 
     @Override
-    protected String doInBackground(String... params) {
+    protected Void doInBackground(String... params) {
         postData();
         return null;
     }
 
     public void postData(){
         try {
-
             HttpClient httpClient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost("http://" + url + rest);
-
-            //Url del servidor
-            //https://proyectoepsl.pythonanywhere.com/rest_sala/
-            //http://192.168.2.129:8000/rest_sala/
-            //HttpPost post = new HttpPost("https://proyectoepsl.pythonanywhere.com/rest_sala/");
-            //Cabecera del envio de datos
-
-            //HttpPost post = new HttpPost("http://" + url + "/rest_login/");
             httppost.setHeader("Content-Type", "application/json");
             httppost.setHeader("charset", "utf-8");
-            //Construimos el objeto en formato JSON
-            //JSONObject dato = new JSONObject();
-            //El dato encritado en json se llama Hash
-            //dato.put("Hash", a);
-            //Creo entidad para enviar los datos
-            //StringEntity entity = new StringEntity(dato.toString());
             httppost.setEntity(entity);
             //Realizo el envío
             HttpResponse resp = null;
-
             resp = httpClient.execute(httppost);
-
-
             //3º:Procesar la respuesta del servidor
             //Obtengo respuesta del servidor
-            String respStr = EntityUtils.toString(resp.getEntity());
+            respStr = EntityUtils.toString(resp.getEntity());
             //Creo un objeto Json con esta respuesta para poder acceder a los datos
-            obj = new JSONObject(respStr);
-
-
-
-            //4º:Segun la respuesta del servidor llevo a cabo las acciones.
-            //Obtengo el objeto resultado de la respuesta
-            resultado = obj.get("result").toString();
-
+            if(respStr != null)
+                obj = new JSONObject(respStr);
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                obj = new JSONObject();
+                obj.put("result", "500");
+                obj.put("Error", "Petición Incorrecta");
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+            }
         } catch (JSONException e) {
-            e.printStackTrace();
+            try {
+                obj = new JSONObject();
+                obj.put("result", "500");
+                obj.put("Error", "Conexión Rechazada");
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+            }
         } catch (Exception e){
-            e.printStackTrace();
+            try {
+                obj = new JSONObject();
+                obj.put("result", "500");
+                obj.put("Error", "Error Interno");
+            } catch (JSONException e1) {
+                e1.printStackTrace();
+            }
         }
-    }
-
-    @Override
-    protected void onPostExecute(String result){
-
     }
 }
